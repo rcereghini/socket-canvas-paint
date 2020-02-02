@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Canvas Socket</title>
+    <style>
+      .hide {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="display: flex;">
+      <canvas
+        id="easle"
+        width="800"
+        height="800"
+        style="border: 1px solid #ddd;"
+      ></canvas>
+      <img
+        id="canvasImg"
+        class="hide"
+        style="border: 1px solid #ddd;"
+        alt="Right Click to Save"
+      />
+      <div style="margin-left: .5em;">
+        <label>
+          Size:
+          <input type="range" min="1" max="100" id="sizeSlider" />
+          <p id="sizeDisplay" style="text-align: center;"></p>
+        </label>
+        <label>
+          Color:
+          <input type="color" id="colorPicker" />
+          <p id="colorDisplay" style="text-align: center;"></p>
+        </label>
+        <button id="saveButton">Save</button>
+        <button id="pingButton">Ping</button>
+      </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+      var socket = io();
+      socket.on("pinged", function(msg) {
+        console.log("hiiii");
+      });
+
+      socket.on("userDrew", function(canvasDetails) {
+        console.log("a user drew!!! Here are the deets:", canvasDetails);
+      });
+
+      const DEFAULT_SIZE = 50;
+      const DEFAULT_COLOR = "#1080ca";
+
+      const canvas = document.querySelector("#easle");
+      const sizeSlider = document.querySelector("#sizeSlider");
+      const sizeDisplay = document.querySelector("#sizeDisplay");
+      const colorPicker = document.querySelector("#colorPicker");
+      const colorDisplay = document.querySelector("#colorDisplay");
+      const saveButton = document.querySelector("#saveButton");
+      const context = canvas.getContext("2d");
+
+      sizeDisplay.innerHTML = DEFAULT_SIZE;
+      sizeSlider.value = DEFAULT_SIZE;
+      colorDisplay.innerHTML = DEFAULT_COLOR;
+      colorPicker.value = DEFAULT_COLOR;
+
+      context.strokeStyle = DEFAULT_COLOR;
+      context.lineJoin = "round";
+      context.lineCap = "round";
+      context.lineWidth = DEFAULT_SIZE;
+
+      let isDrawing = false;
+      let lastX = 0;
+      let lastY = 0;
+
+      function draw(e) {
+        if (!isDrawing) return;
+
+        let drawDetails = {
+          lastX: lastX,
+          lastY: lastY,
+          offsetX: e.offsetX,
+          offsetY: e.offsetY,
+          strokeStyle: context.strokeStyle,
+          lineJoin: context.lineJoin,
+          lineCap: context.lineCap,
+          lineWidth: context.lineWidth
+        };
+
+        context.beginPath();
+        context.moveTo(lastX, lastY);
+        context.lineTo(e.offsetX, e.offsetY);
+        context.stroke();
+        [lastX, lastY] = [e.offsetX, e.offsetY];
+
+        socket.emit("userDrawing", drawDetails);
+      }
+
+      function changeLineWidth(e) {
+        context.lineWidth = e.target.value;
+        sizeDisplay.innerHTML = e.target.value;
+      }
+
+      function changeColor(e) {
+        context.strokeStyle = e.target.value;
+        colorDisplay.innerHTML = e.target.value;
+      }
+
+      function download(filename, img) {
+        var element = document.createElement("a");
+        element.setAttribute("href", img.src);
+        element.setAttribute("download", filename);
+
+        element.style.display = "none";
+        document.body.appendChild(element);
+
+        element.click();
+
+        document.body.removeChild(element);
+      }
+
+      function saveImage() {
+        canvas.classList.toggle("hide");
+        canvasImg.classList.toggle("hide");
+        let dataURL = canvas.toDataURL();
+        document.querySelector("#canvasImg").src = dataURL;
+
+        var img = document.querySelector("#canvasImg");
+        var filename = "img.png";
+
+        download(filename, img);
+      }
+
+      function ping() {
+        socket.emit("testPing", "testPing");
+      }
+
+      const pingButton = document.querySelector("#pingButton");
+      console.log("pingButton =>", pingButton);
+      pingButton.addEventListener("click", ping);
+
+      canvas.addEventListener("mousemove", draw);
+      canvas.addEventListener("mousedown", e => {
+        isDrawing = true;
+        [lastX, lastY] = [e.offsetX, e.offsetY];
+      });
+      canvas.addEventListener("mouseup", () => (isDrawing = false));
+      canvas.addEventListener("mouseout", () => (isDrawing = false));
+      sizeSlider.addEventListener("input", changeLineWidth);
+      colorPicker.addEventListener("input", changeColor);
+      saveButton.addEventListener("click", saveImage);
+    </script>
+    <script></script>
+  </body>
+</html>
