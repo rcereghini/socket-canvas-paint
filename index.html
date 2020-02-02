@@ -101,22 +101,25 @@
       }
 
       function drawOtherUserInput(drawDetails) {
-        let { strokeStyle, lineJoin, lineCap, lineWidth } = context;
+        let initialStrokeStyle = context.strokeStyle;
+        let initialLineJoin = context.lineJoin;
+        let initialLineCap = context.lineCap;
+        let initialLineWidth = context.lineWidth;
 
-        strokeStyle = drawDetails.strokeStyle;
-        lineJoin = drawDetails.lineJoin;
-        lineCap = drawDetails.lineCap;
-        lineWidth = drawDetails.lineWidth;
+        context.strokeStyle = drawDetails.strokeStyle;
+        context.lineJoin = drawDetails.lineJoin;
+        context.lineCap = drawDetails.lineCap;
+        context.lineWidth = drawDetails.lineWidth;
 
         context.beginPath();
         context.moveTo(drawDetails.lastX, drawDetails.lastY);
         context.lineTo(drawDetails.offsetX, drawDetails.offsetY);
         context.stroke();
 
-        strokeStyle = DEFAULT_COLOR;
-        lineJoin = "round";
-        lineCap = "round";
-        lineWidth = DEFAULT_SIZE;
+        context.strokeStyle = initialStrokeStyle;
+        context.lineJoin = initialLineJoin;
+        context.lineCap = initialLineCap;
+        context.lineWidth = initialLineWidth;
       }
 
       function changeLineWidth(e) {
