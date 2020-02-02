@@ -19,7 +19,6 @@ io.on("connection", function(socket) {
 
   socket.on("userDrawing", function(canvasEvent) {
     io.emit("userDrew", canvasEvent);
-    console.log("a user drew!", canvasEvent);
   });
 });
 
