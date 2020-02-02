@@ -49,7 +49,7 @@
       });
 
       socket.on("userDrew", function(canvasDetails) {
-        console.log("a user drew!!! Here are the deets:", canvasDetails);
+        drawOtherUserInput(canvasDetails);
       });
 
       const DEFAULT_SIZE = 50;
@@ -98,6 +98,25 @@
         [lastX, lastY] = [e.offsetX, e.offsetY];
 
         socket.emit("userDrawing", drawDetails);
+      }
+
+      function drawOtherUserInput(drawDetails) {
+        let { strokeStyle, lineJoin, lineCap, lineWidth } = context;
+
+        strokeStyle = drawDetails.strokeStyle;
+        lineJoin = drawDetails.lineJoin;
+        lineCap = drawDetails.lineCap;
+        lineWidth = drawDetails.lineWidth;
+
+        context.beginPath();
+        context.moveTo(drawDetails.lastX, drawDetails.lastY);
+        context.lineTo(drawDetails.offsetX, drawDetails.offsetY);
+        context.stroke();
+
+        strokeStyle = DEFAULT_COLOR;
+        lineJoin = "round";
+        lineCap = "round";
+        lineWidth = DEFAULT_SIZE;
       }
 
       function changeLineWidth(e) {
